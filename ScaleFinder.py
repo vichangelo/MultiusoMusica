@@ -50,7 +50,6 @@ def return_chordnotes(chordinput):
     chords = str(chordinput)
     T = chords[0:1]
     total = []
-
     if not ("#" in T or "b" in T):
         T = T[0]
     total.append(T)
