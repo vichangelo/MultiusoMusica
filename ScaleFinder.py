@@ -17,6 +17,14 @@ chords_dict = {"2": 2, "9": 2, "m": 3, "4": 5, "11": 5,
                "5-": 6, "º": 6, "dim": 6, "5": 7, "5+": 8,
                "6": 9, "13": 9, "7": 10, "7M": 11}
 
+def check_accident(total, subj):
+    total = str(total)
+    subj = str(subj)
+    accident = total.index(subj) - 1
+    if (subj in total) and (total[accident] == "b" or total[accident] == "#"):
+
+
+
 
 def return_degree(n, degree, chord=False):
     """Retorna segunda nota de intervalo.
@@ -101,6 +109,23 @@ class Scale:
             count += 1
 
         return tons
+
+
+class Chord:
+    """doc"""
+    def __init__(self, name):
+        self.name = str(name)
+        self.notes = []
+        self.root = self.name[0]
+
+        if self.name[1] == "#" or self.name[1] == "b":
+            self.root = self.root + self.name[1]
+        self.notes.append(self.root)
+
+    def has_second(self):
+        name = self.name
+        if "9" in name or "2" in name:
+            self.notes.append(return_degree(self.root, "II"))
 
 
 def comparar(lista_notas, tons_escala, porcentagem=False):
