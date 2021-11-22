@@ -17,16 +17,20 @@ chords_dict = {"2": 2, "9": 2, "m": 3, "4": 5, "11": 5,
                "5-": 6, "º": 6, "dim": 6, "5": 7, "5+": 8,
                "6": 9, "13": 9, "7": 10, "7M": 11}
 
+
 def check_accident(total, subj):
-    total = str(total)
-    subj = str(subj)
-    accident = total.index(subj) - 1
-    if (subj in total) and (total[accident] == "b" or total[accident] == "#"):
+    """"""
+    accident = total.index(subj[0]) - 1
+
+    if total[accident] == "b":
+        return - 1
+    elif total[accident] == "#":
+        return 1
+    else:
+        return
 
 
-
-
-def return_degree(n, degree, chord=False):
+def return_degree(n, degree):
     """Retorna segunda nota de intervalo.
 
     Args:
@@ -34,34 +38,11 @@ def return_degree(n, degree, chord=False):
         degree (str): grau qualquer entre união e sétima maior.
     """
     n = notes.index(n)
-
-    if chord:
-        if "b" in degree:
-            degree = degree.replace("b", "")
-            n += chords_dict[degree] - 1
-            print(n)
-        elif "#" in degree:
-            degree = degree.replace("#", "")
-            n += chords_dict[degree] + 1
-        else:
-            n += chords_dict[degree]
-            print(n)
-    else:
-        n += degrees_dict[degree]
+    n += degrees_dict[degree]
 
     if n > 11:
         n = n - 12
     return notes[n]
-
-
-def return_chordnotes(chordinput):
-    chords = str(chordinput)
-    T = chords[0:1]
-    total = []
-    if not ("#" in T or "b" in T):
-        T = T[0]
-    total.append(T)
-    chords = chords.replace(T, "")
 
 
 class Scale:
@@ -125,7 +106,43 @@ class Chord:
     def has_second(self):
         name = self.name
         if "9" in name or "2" in name:
-            self.notes.append(return_degree(self.root, "II"))
+            degree_index = chords_dict["9"] + check_accident(self.name, "9")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_third(self):
+        name = self.name
+        if "sus" in name or (self.name == self.root + "5"):
+            return
+        elif "m" in name or "dim" in name or "º" in name or "5-" in name:
+            degree_index = chords_dict["m"]
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+        else:
+            self.notes.append(return_degree(self.root, "III"))
+
+    def has_fourth(self):
+        name = self.name
+        if ("sus" in name and "2" not in name) or "4" in name or "11" in name:
+            degree_index = chords_dict["4"] + check_accident(self.name, "11")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_fifth(self):
+        name = self.name
+        if "no5" in name:
+            return
+        elif "dim" in name or "º" or "5-" in name:
+            self.notes.append(return_degree(self.root, "v"))
+        else:
+            degree_index = chords_dict["5"] + check_accident(self.name, "5")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_sixth(self):
+        name = self.name
+        if "6" in name or "13" in name:
+
 
 
 def comparar(lista_notas, tons_escala, porcentagem=False):
