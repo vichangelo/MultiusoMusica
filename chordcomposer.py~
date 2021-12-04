@@ -1,0 +1,69 @@
+import base
+import baseclasses
+
+
+class Chord():
+    def triad_compose(self):
+        if (3 not in self.formants) and (4 not in self.formants):
+            self.name += "sus"
+            if 2 in self.formants:
+                self.name += "2"
+            if 5 in self.formants:
+                self.name += "4"
+
+        if self.formants == {7}:
+            self.name = self.root + "5"
+        if (8 in self.formants) and (7 not in self.formants):
+            self.name = self.root + "5+"
+
+        if 3 in self.formants:
+            self.name += "m"
+        if 6 in self.formants:
+            self.name = self.root + "(b5)"
+
+    def tetrad_compose(self):
+        if self.name[-1].isdigit():
+            self.name += "/"
+        if (9 in self.formants) and ("m(b5)" in self.name):
+            self.name = self.root + "dim"
+        if 10 in self.formants:
+            self.name += "7"
+            if "m(b5)" in self.name:
+                self.name = self.root + "m7(b5)"
+
+        if 11 in self.formants:
+            self.name += "7M"
+
+    def extended_compose(self):
+        listformant = list(self.formants)
+        listformant.sort()
+
+        for f in listformant:
+            if (self.name[-1].isdigit()) or (self.name[-1] == "M"):
+                self.name += "/"
+
+            if f == 1:
+                self.name += "b9"
+            if f == 2:
+                self.name += "9"
+
+            if f == 4 and (3 in self.formants):
+                self.name += "b11"
+            if f == 5 and ("4" not in self.name):
+                self.name += "11"
+            if f == 6 and (7 in self.formants):
+                self.name += "#11"
+
+            if f == 8 and (7 in self.formants):
+                self.name += "b13"
+            if f == 9 and (6 not in self.formants):
+                self.name += "13"
+
+    def compose(self):
+        self.decompose()
+        self.triad_compose()
+        self.tetrad_compose()
+        self.extended_compose()
+        if self.name[-1] == "/":
+            self.name = self.name[:-1]
+        print(self.name)

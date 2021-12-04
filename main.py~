@@ -1,0 +1,37 @@
+# -*- coding: latin-1 -*-
+import keyfinder, base
+
+introduction = ("Olá! Bem-vindo ao programa multiuso para músicos!\n"
+                "Digite 'T' para tirar o tom de uma música inserindo "
+                "seus acordes, 'A' para identificar ou decompôr acordes "
+                "e 'E' para montar escalas.\n")
+print(introduction)
+
+
+selector = str(input("Insira:  "))
+if selector == "T":
+    print(("\nPara descobrir o tom da música, insira os acordes "
+          "separados por espaços.\n"))
+    chords = keyfinder.chords_input()
+    notes = keyfinder.chords_decompose(chords)
+    matches = keyfinder.compare(notes, keyfinder.tons_maior, True)
+    keyfinder.matchformat(matches)
+
+if selector == "A":
+    announcement = ("\nDigite 'D' para descobrir as notas de um acorde ou 'I' "
+                    "para identificar um acorde a partir de suas notas.\n")
+    print(announcement)
+    dec_or_id = str(input("Insira: "))
+
+    if dec_or_id == "D":
+        chord = keyfinder.chords_input()
+        notes = keyfinder.chords_decompose(chord)
+        print(notes)
+
+    if dec_or_id == "I":
+        prompt = ("\nPor favor, insira as notas em maiúsculas e separadas por "
+                  "espaços para que possamos identificar o acorde.\n")
+        print(prompt)
+        notes = input("Insira: ")
+        x = base.Chord("", notes)
+        x.compose()

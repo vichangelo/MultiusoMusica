@@ -1,73 +1,160 @@
-# python 3.7.1
-"""Application to find the key of music based on its chords.
+# -*- coding: latin-1 -*-
+"""Module to find the key of a piece of music based on its chords.
 
 Utilizes a base module containing essential classes and functions (see its
-documentation for further detail), then interfaces them with the user in order
-to perform the required action.
+documentation for further detail), then interfaces them with the user in a
+single function to perform the input and output.
+
+Imports:
+    baseclasses: contains the necessary Chord class and other functions
+
+Functions:
+    chords_input(): takes user input and turns in objects of the Chord class
+    input_decompose(): decompose objects from Chord and returns their notes
+                       in a list.
+    compare(): takes notes in a list and compares them against notes of a scale
+               in all keys to find the most probable one. If the optional
+               argument is true, returns in percentage the most probable ones.
+    matchformat(): uses a list of the matches with notes and percentages to
+                   format it and print to the user.
+    keyfind(): the titular function combines all the previous functions to
+               receive input and present desired output to the user.
 """
 
 
-import base
+import baseclasses
 
 
-def compare(chord_notes, scale_keys, percentage=False):
-    """Compares the notes of a chord with keys on a given scale.
+def chords_input():
+    """Takes user input, turns in chord names and then in Chord objects."""
+    chordinput = str(input("Acordes: ")).split()
+    chords = []
+    for chord in chordinput:
+        chords.append(baseclasses.Chord(chord))
 
-    Iterates the scale, then the keys, then compares the notes in the keys
-    with the notes in the chord(s). If the parameter percentage is True then
-    the function also returns the probability of the match in percentage.
+    return chords
 
-    Args:
-        chord_notes (list): notes of the chord(s) to be analyzed
-        scale_keys (dict): notes of the keys of a given scale to be analyzed
-        percentage (bool): optional, determines whether percentage is returned
-    Returns:
-        matches (dict): number of matches per key
-        results (dict): notes shared between chord and key
-    """
-    scale = list(scale_keys.values())
-    matches = {}
-    results = {}
-    i = 0
 
-    for key in scale:
-        matches[key[0]] = i
-        results[key[0]] = []
-        i += 1
-        for note in key:
-            for chord_note in chord_notes:
-                if note == chord_note:
-                    matches[key[0]] = i
-                    results[key[0]].append(note)
-                    i += 1
-        i = 0
+def input_decompose(chords: list):
+    """Takes a list of Chord objects and returns their notes in a list."""
+    output = []
+    for chord in chords:
+        chord.decompose()
+        for note in chord.notes:
+            if note not in output:
+                output.append(note)
 
-    if percentage:
-        scale_length = len(scale[0])
-        for match in matches:
-            a = matches[match] / scale_length
-            b = round(a * 100)
-            if b > 100:
-                b = 100
-            matches[match] = str(b) + "%"
+    return output
+
+
+def matchpercentage_calc(scalenotes: list, matches: dict):
+    """Divides the number of matches by the number of notes in the scale."""
+    scale_length = len(scalenotes[0])
+    for match in matches:
+        a = matches[match] / scale_length
+        b = round(a * 100)
+        if b > 100:
+            b = 100
+        if b < 0:
+            b = 0
+        matches[match] = b
 
     return matches
 
 
-# Instanciando escala diatÃ´nica maior, utilizando estrutura padrÃ£o.
-dia_maior = base.Scale("diatonica maior")
-tons_maior = dia_maior.apply()
+def compare(chord_notes, scale_keys, percentage=False):
+    """Compares the notes of chords with keys's notes on a given scale.
 
-chords_input = str(input("Acordes: ")).split()
-chords = []
-notes = []
-i = 0
-for chord in chords_input:
-    chords.append(base.Chord(chord))
-    chords[i].decompose_chord()
-    notes.extend(chords[i].notes)
-    i += 1
+    Iterates the scale, for each key setting the tonic in the dictionaries to
+    be returned then comparing its notes with the chords' notes and updating
+    the returns. In the percentage part, .
 
-# print(__doc__)
-print(notes)
-print(compare(notes, tons_maior, True))
+    Args:
+        chord_notes (list): notes of the chords to be compared.
+        scale_keys (dict): keys and notes of said keys of a given scale
+                           to be compared.
+        percentage (bool): optional, determines if percentage of combination
+                           is returned.
+
+    Vars:
+        scale_values (list): list containing only the notes of scale_keys.
+        i (int): counter
+
+    Returns:
+        matches (dict): keys and number of matches per key.
+        results (dict): keys and notes shared between each of them and chords.
+    """
+    scale_values = list(scale_keys.values())
+    matches = {}
+    results = {}
+    i = 0
+
+    for key in scale_values:
+        tonic = key[0]
+        matches[tonic] = i
+        results[tonic] = []
+        i += 1
+        for note in key:
+            for chord_note in chord_notes:
+                if note == chord_note:
+                    matches[tonic] = i
+                    results[tonic].append(note)
+                    i += 1
+        i = 0
+
+    # For each note that isn't a match, probability of the key being correct
+    # decreases.
+    for note in chord_notes:
+        for key in scale_values:
+            tonic = key[0]
+            if note not in key:
+                matches[tonic] -= 1
+
+    if percentage:
+        return matchpercentage_calc(scale_values, matches)
+    else:
+        return results
+
+
+def matchformat(matches: dict):
+    """Formats the return of the compare() function to present it to the user.
+
+    Turns 'matches' into tuple 'top3tup' containing its key:value pairs
+    so a function can be made to sort it. Then creates and format strings
+    so that the top 3 matches are displayed to the user.
+
+    Functions:
+        criteria(pairs): receive tuple top3tup and return only its integer.
+
+    Vars:
+        top3tup: tuple containing pairs of key:notes originally from 'matches'
+                 but now easily sorted and obtained.
+    """
+    top3tup = list(matches.items())
+
+    def criteria(pairs):
+        value = pairs[1]
+        return value
+    top3tup.sort(reverse=True, key=criteria)
+
+    if top3tup[0][1] == 100:
+        tom = "O tom é {}.".format(top3tup[0][0])
+        return print(tom)
+    else:
+        tons = ("Os tons mais prováveis são {} ({}%), "
+                "{} ({}%) e {} ({}%).".format(top3tup[0][0], top3tup[0][1],
+                                              top3tup[1][0], top3tup[1][1],
+                                              top3tup[2][0], top3tup[2][1]))
+        return print(tons)
+
+
+def keyfind():
+    """Declares major scale and executes whole script."""
+    baseclasses.Scale("M", "I II III IV V VI VII")
+    major_tones = baseclasses.Scale.apply("M")
+
+    chords = chords_input()
+    notes = input_decompose(chords)
+    matches = compare(notes, major_tones, True)
+    matchformat(matches)
+    return

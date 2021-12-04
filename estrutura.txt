@@ -1,0 +1,26 @@
+Módulos:
+  - base.py (essential classes and functions)
+  - keyfinder.py (using chords to find song key)
+  - scalegenerator.py (generating scale from key and scale name)
+  - __init__.py (initialize the package, start user interface)
+
+Notes:
+  - Use simplest inputs possible ("Y or N")
+
+__init__:
+  - Give options of scripts
+  - As simple as possible
+  - Import only necessary modules
+
+Base:
+  - Contains Chord and Scale classes and important functions
+  - Imported by the other main modules
+
+Keyfinder:
+  - Imports "base.py"
+  - Gets input of chords or notes and return notes, percentages of probability and probable scale and notes
+  - Gets input of notes and return probable scales
+
+Scalegenerator:
+  - Imports "base.py"
+  - Gets input of scale and key and generate the corresponding notes

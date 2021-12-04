@@ -1,0 +1,351 @@
+"""Base module for multi-purpose musical python script.
+
+Functions:
+    check_accident(total, subj, octave=1): returns the equivalent semitones
+    if the submitted note or interval is sharp or flat.
+    return_degree(n, degree): returns the second note in an interval according
+    to the tonic and the degree.
+
+Classes:
+    Scale: has the methods and attributes to instantiate a scale and apply it
+    to the 12 keys of the chromatic scale.
+    Chord: has the methods and attributes to instantiate a chord and decompose
+    it, retrieving its notes.
+
+Vars:
+    notes (list): list containing the 12 notes of the chromatic scale
+    degrees_dict (dict): dictionary containing all the degrees of the diatonic
+    scale and their corresponding semitones
+    chords_dict (dict): dictionary containing all the symbols used in chord
+    names, and their corresponding semitones
+"""
+
+notes = ["C", "C#", "D", "Eb", "E", "F",
+         "F#", "G", "G#", "A", "Bb", "B"]
+degrees_dict = {"I": 0, "ii": 1, "II": 2, "iii": 3, "III": 4,
+                "IV": 5, "v": 6, "V": 7, "vi": 8, "VI": 9,
+                "vii": 10, "VII": 11}
+chords_dict = {"2": 2, "9": 2, "m": 3, "4": 5, "11": 5,
+               "5-": 6, "º": 6, "dim": 6, "5": 7, "5+": 8,
+               "6": 9, "13": 9, "7": 10, "7M": 11}
+
+
+def check_accident(total, subj, octave=1):
+    """Checks if certain symbol is sharp or flat.
+
+    Uses a chord string and a symbol substring and, based on the contents
+    of the substring and its position, determines if its symbol is
+    sharp or flat. Then, returns an integer of the corresponding
+    amount of semitones.
+
+    Args:
+        total (str): string of the chord. ex: "Dm7(b9)"
+        subj (str): string of the symbol. ex: "9"
+        octave (int): optional, used in case the symbol has 2 digits
+    """
+    if subj in total and len(total) > 2:
+        accident1 = total.index(subj[0]) - 1
+        accident2 = total.index(subj[0]) + octave
+        if total.endswith(subj):
+            accident2 = accident1
+
+        if total[accident1] == "b" or total[accident2] == "-":
+            return - 1
+        elif total[accident1] == "#" or total[accident2] == "+":
+            return 1
+        else:
+            return 0
+    else:
+        return 0
+
+
+def return_degree(n, degree):
+    """Returns the second note of an interval.
+
+    Given a tonic and a degree, this function will assign the tonic
+    to its index in the list of notes and then sum it with the number
+    of semitones associated with the degree in its dictionary. Then,
+    return a note from the aforementioned list with the new index.
+
+    Args:
+        n (str): note from the chromatic scale
+        degree (str): degree between unison ("I") and major seventh
+        ("VII"), minor and diminisheds are written in lowercase.
+    """
+    n = notes.index(n)
+    n += degrees_dict[degree]
+
+    if n > 11:
+        n = n - 12
+    return notes[n]
+
+
+class Scale:
+    """Model class to define and instantiate scales.
+
+    Attributes:
+        name (str): scale's name.
+        structure (list): Optional, degrees that compose the scale,
+        separated by minuses. ex (default): "I-II-III-IV-V-VI-VII"
+    """
+
+    def __init__(self, name, structure="I-II-III-IV-V-VI-VII"):
+        """Turns the structure into a list."""
+        self.name = name
+        self.structure = str(structure).split("-")
+
+    def is_minor(self):
+        """Returns true if the scale has a minor third."""
+        if "iii" in self.structure:
+            return True
+        else:
+            return False
+
+    def is_diminished(self):
+        """Returns true if the scale has a diminished fifth."""
+        if "v" in self.structure:
+            return True
+        else:
+            return False
+
+    def apply(self):
+        """Applies the scale structure to all 12 keys.
+
+        Creates a dictionary to be filled with the notes of the scale
+        on all keys, then creates a list of said keys. Iterates the
+        dictionary while the number of degrees in the scale isn't met
+        and sums to it the second notes of the intervals of the scale,
+        using the function return_degree and the tonic.
+        """
+        total = {"C": [], "C#": [], "D": [], "Eb": [], "E": [], "F": [],
+                 "F#": [], "G": [], "G#": [], "A": [], "Bb": [], "B": []}
+        keys = list(total.keys())
+        degrees = self.structure
+        count = 0
+        i = 0
+
+        while count < len(degrees):
+            for key in total:
+                current_degree = return_degree(keys[i], degrees[count])
+                total[key].append(current_degree)
+                i += 1
+            i = 0
+            count += 1
+
+        return total
+
+
+class Chord:
+    """Model class to define and instantiate chords.
+
+    In the constructor, detects the root and establish it as attribute.
+    Has methods to detect specific symbols and, consequently, notes
+    related to the root. Final method apply all of them to the chord
+    and fully decomposes it.
+
+    Attributes:
+        name (str): Chord's name.
+        notes (list): All the chord's notes.
+        root (str): Chord's root, tonic, first note.
+    """
+    def __init__(self, name: str, chord_notes=""):
+        self.name = name
+        self.notes = chord_notes.split(" ")
+        self.root = ""
+        self.formants = set()
+
+        if len(self.name) > 0:
+            self.root = self.name[0]
+        if len(self.name) > 1:
+            if self.name[1] == "#" or self.name[1] == "b":
+                self.root = self.root + self.name[1]
+
+        if self.notes[0] in notes:
+            self.root = self.notes[0]
+            self.name = self.root
+        else:
+            self.notes = []
+        self.notes.append(self.root)
+
+    def has_second(self):
+        """Check for presence of a second and if it's sharp or flat."""
+        name = self.name
+        print(self.root)
+        for note in self.notes:
+            if note == return_degree(self.root, "ii"):
+                self.formants.add(1)
+            if note == return_degree(self.root, "II"):
+                self.formants.add(2)
+
+        if "9" in name or "2" in name:
+            degree_index = chords_dict["9"] + check_accident(self.name, "9")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_third(self):
+        """Check for presence of a third and if it's sharp or flat."""
+        name = self.name
+
+        for note in self.notes:
+            if note == return_degree(self.root, "iii"):
+                self.formants.add(3)
+            if note == return_degree(self.root, "III"):
+                self.formants.add(4)
+
+        if "sus" in name or (self.name == self.root + "5"):
+            return
+        elif "m" in name or "dim" in name or "º" in name or "5-" in name:
+            degree_index = chords_dict["m"]
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+        else:
+            self.notes.append(return_degree(self.root, "III"))
+
+    def has_fourth(self):
+        """Check for presence of a fourth and if it's sharp or flat."""
+        name = self.name
+        for note in self.notes:
+            if note == return_degree(self.root, "IV"):
+                self.formants.add(5)
+            if note == return_degree(self.root, "v"):
+                self.formants.add(6)
+
+        if ("sus" in name and "2" not in name) or "4" in name:
+            degree_index = chords_dict["4"] + check_accident(self.name, "4")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+        if "11" in name:
+            degree_index = chords_dict["11"] + check_accident(self.name, "11", 2)
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_fifth(self):
+        """Check for presence of a fifth and if it's sharp or flat."""
+        for note in self.notes:
+            if note == return_degree(self.root, "v"):
+                self.formants.add(6)
+            if note == return_degree(self.root, "V"):
+                self.formants.add(7)
+
+        name = self.name
+        if "no5" in name:
+            return
+        elif "dim" in name or "º" in name or "5-" in name:
+            self.notes.append(return_degree(self.root, "v"))
+        else:
+            degree_index = chords_dict["5"] + check_accident(self.name, "5")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_sixth(self):
+
+        name = self.name
+        for note in self.notes:
+            if note == return_degree(self.root, "vi"):
+                self.formants.add(8)
+            if note == return_degree(self.root, "VI"):
+                self.formants.add(9)
+
+        if "6" in name or "13" in name:
+            degree_index = chords_dict["13"] + check_accident(self.name, "13", 2)
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def has_seventh(self):
+        name = self.name
+        for note in self.notes:
+            if note == return_degree(self.root, "vii"):
+                self.formants.add(10)
+            if note == return_degree(self.root, "VII"):
+                self.formants.add(11)
+
+        if "7" in name and ("7M" not in name and "maj7" not in name):
+            degree_index = chords_dict["7"] + check_accident(self.name, "7")
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+        if "7M" in name or "maj7" in name:
+            degree_index = chords_dict["7M"] + check_accident(self.name, "7M", 1)
+            degree = list(degrees_dict.keys())[degree_index]
+            self.notes.append(return_degree(self.root, degree))
+
+    def is_sus(self):
+        if ((return_degree(self.root, "III") not in self.notes) and
+                return_degree(self.root, "iii") not in self.notes):
+            self.name += "sus"
+
+    def triad_compose(self):
+        if (3 not in self.formants) and (4 not in self.formants):
+            self.name += "sus"
+            if 2 in self.formants:
+                self.name += "2"
+            if 5 in self.formants:
+                self.name += "4"
+
+        if self.formants == {7}:
+            self.name = self.root + "5"
+        if (8 in self.formants) and (7 not in self.formants):
+            self.name = self.root + "5+"
+
+        if 3 in self.formants:
+            self.name += "m"
+        if 6 in self.formants:
+            self.name = self.root + "(b5)"
+
+    def tetrad_compose(self):
+        if self.name[-1].isdigit():
+            self.name += "/"
+        if (9 in self.formants) and ("m(b5)" in self.name):
+            self.name = self.root + "dim"
+        if 10 in self.formants:
+            self.name += "7"
+            if "m(b5)" in self.name:
+                self.name = self.root + "m7(b5)"
+
+        if 11 in self.formants:
+            self.name += "7M"
+
+    def extended_compose(self):
+        listformant = list(self.formants)
+        listformant.sort()
+
+        for f in listformant:
+            if (self.name[-1].isdigit()) or (self.name[-1] == "M"):
+                self.name += "/"
+
+            if f == 1:
+                self.name += "b9"
+            if f == 2:
+                self.name += "9"
+
+            if f == 4 and (3 in self.formants):
+                self.name += "b11"
+            if f == 5 and ("4" not in self.name):
+                self.name += "11"
+            if f == 6 and (7 in self.formants):
+                self.name += "#11"
+
+            if f == 8 and (7 in self.formants):
+                self.name += "b13"
+            if f == 9 and (6 not in self.formants):
+                self.name += "13"
+
+    def decompose(self):
+        self.has_second()
+        self.has_third()
+        self.has_fourth()
+        self.has_fifth()
+        self.has_sixth()
+        self.has_seventh()
+
+    def compose(self):
+        self.decompose()
+        self.triad_compose()
+        self.tetrad_compose()
+        self.extended_compose()
+        if self.name[-1] == "/":
+            self.name = self.name[:-1]
+        print(self.name)
+
+x = Chord("Cm7")
+x.decompose()
+print(x.notes, x.formants)

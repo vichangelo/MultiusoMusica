@@ -1,0 +1,4 @@
+import baseclasses
+
+
+major = baseclasses.Scale("Major")

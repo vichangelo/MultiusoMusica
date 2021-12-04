@@ -1,0 +1,6 @@
+import keyfinder
+
+introduction = ("Olá! Bem-vindo ao programa multiuso para músicos!\n"
+                "Digite 'T' para tirar o tom de uma música inserindo "
+                "seus acordes, 'A' para identificar ou decompôr acordes "
+                "e 'E' para montar escalas.")
